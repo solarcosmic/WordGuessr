@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body {
+            background-color: #141414;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <form name="join_name" id="join_game_form">
+        <input type="text" name="codename" id="codename"></input>
+        <input name="Submit" type="submit" value="Join"></input>
+    </form>
+</body>
+<script>
+    const socket = io();
+    console.log("Attempting to connect...");
+    socket.on("connect", () => {
+        console.log("Connected! Socket id: " + socket.id);
+    });
+    socket.on("connect_error", err => {
+        console.error("Socket failed to connect: " + err);
+    })
+
+    const joinForm = document.getElementById("join_game_form");
+
+    joinForm.addEventListener("submit", function(event) {
+        event.preventDefault();
+
+        const playerName = document.getElementById("codename");
+        const nameValue = playerName.value;
+
+        console.log("Form submitting: " + nameValue);
+        socket.emit("join_game", nameValue);
+    });
+</script>
+</html>
