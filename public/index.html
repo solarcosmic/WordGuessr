@@ -6,17 +6,78 @@
     <title>Document</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
+        @font-face {
+            font-family: "Inter";
+            src: url("assets/Inter.ttf");
+        }
         body {
             background-color: #141414;
             color: #ffffff;
+            font-family: "Inter", sans-serif;
+        }
+        #container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+            height: 300px;
+            background-color: #1f1f1f;
+            border-radius: 8px;
+        }
+        .lobby-player {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            margin-bottom: 5px;
+            background-color: #1f1f1f;
+        }
+        #leave-btn {
+            margin-left: auto;
+            background-color: #af5b5b;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .leave-img {
+            width: 20px;
+            height: 20px;
+            padding: 5px 5px;
+            filter: invert(100%) sepia(100%) saturate(1%) hue-rotate(125deg) brightness(105%) contrast(101%);
+        }
+        #ready-btn {
+            margin-left: auto;
+            background-color: #00a2ff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <form name="join_name" id="join_game_form">
-        <input type="text" name="codename" id="codename"></input>
-        <input name="Submit" type="submit" value="Join"></input>
-    </form>
+    <div id="container">
+        <img src="/assets/wordguessr_logo_full.png" style="width: 340px; height: 60px; margin: 20px 0;"></img>
+        <form name="join_name" id="join_game_form">
+            <input type="text" name="codename" id="codename"></input>
+            <input name="Submit" type="submit" value="Join"></input>
+        </form>
+        <p style="color: rgb(255, 118, 118); display: none;" id="join_error">Uh oh!</p>
+        <div id="waiting-lobby" style="display: none;">
+            <h1>Waiting Lobby</h1>
+            <div id="lobby-players">
+
+            </div>
+        </div>
+        <div id="game-screen" style="display: none;">
+            Game starting!
+            <div id="fill-words" style="display: none;">
+                Fill in the missing word(s):<br>
+                <code id="question">The quick brown ___ jumped over the lazy dog.</code>
+                <input type="text" id="fill-word-box"></input>
+                <p style="color: green; display: none;" id="completed">Completed!</p>
+            </div>
+        </div>
+    </div>
 </body>
 <script>
     const socket = io();
@@ -29,6 +90,7 @@
     })
 
     const joinForm = document.getElementById("join_game_form");
+    var joinedGame = false;
 
     joinForm.addEventListener("submit", function(event) {
         event.preventDefault();
@@ -39,5 +101,85 @@
         console.log("Form submitting: " + nameValue);
         socket.emit("join_game", nameValue);
     });
+
+    socket.on("join_error", (err) => {
+        const join_err_object = document.getElementById("join_error");
+        join_err_object.textContent = "Uh oh! " + err;
+        join_err_object.style.display = "block";
+    });
+
+    socket.on("lobby_update", (players) => {
+        const lobby_players = document.getElementById("lobby-players");
+        const waiting_lobby = document.getElementById("waiting-lobby");
+        lobby_players.innerHTML = "";
+        for (const player of players) {
+            const playerDiv = document.createElement("div");
+            playerDiv.classList.add("lobby-player");
+            playerDiv.textContent = player["name"];
+            lobby_players.appendChild(playerDiv);
+            if (player["id"] == socket.id) {
+                playerDiv.textContent += " (You!)";
+                const leave_btn = document.createElement("button");
+                leave_btn.setAttribute("id", "leave-btn");
+                const leave_img = document.createElement("img");
+                leave_img.src = "/assets/right-from-bracket-solid.svg";
+                leave_img.alt = "Leave";
+                leave_img.classList.add("leave-img");
+                leave_btn.appendChild(leave_img);
+                leave_btn.addEventListener("click", () => {
+                    socket.emit("leave_lobby");
+                    joinForm.style.display = "block";
+                    waiting_lobby.style.display = "none";
+                });
+                if (player["ready"] == false) {
+                    const ready_btn = document.createElement("button");
+                    ready_btn.textContent = "Ready Up";
+                    ready_btn.setAttribute("id", "ready-btn");
+                    ready_btn.addEventListener("click", () => {
+                        socket.emit("ready");
+                    });
+                    playerDiv.appendChild(ready_btn);
+                }
+                playerDiv.appendChild(leave_btn);
+                joinForm.style.display = "none";
+                waiting_lobby.style.display = "block";
+            }
+            if (player["ready"] == true) {
+                playerDiv.textContent += " (Ready)";
+            }
+        }
+    });
+
+    function showQuestion(question, callback) {
+        console.log(question);
+        const game_screen = document.getElementById("game-screen");
+        game_screen.style.display = "block";
+        const fill_words = document.getElementById("fill-words");
+        fill_words.style.display = "block";
+        const questionElement = document.getElementById("question");
+        questionElement.textContent = question.text;
+        const completed = document.getElementById("completed");
+        const fill_box = document.getElementById("fill-word-box");
+        fill_box.value = "";
+        fill_box.focus();
+        fill_box.addEventListener("input", (e) => {
+            socket.emit("enter_fill_entry", fill_box.value);
+        })
+        socket.on("fill_entry_complete", () => {
+            //fill_box.disabled = true;
+            //completed.style.display = "block";
+            callback(true);
+        })
+    }
+
+    socket.on("start_game", () => {
+        const waiting_lobby = document.getElementById("waiting-lobby");
+        waiting_lobby.style.display = "none";
+        socket.on('new_question', (q, ack) => {
+            const question = showQuestion(q, (correct) => {
+                if (correct) ack();
+            });
+        });
+    })
 </script>
 </html>
