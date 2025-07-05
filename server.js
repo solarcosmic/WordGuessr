@@ -50,18 +50,35 @@ function generateRandomSet() {
 
 async function beginGame() {
     const set = generateRandomSet();
-    for (const id of Object.keys(players)) {
-        const socket = await getSocketById(id);
-        if (!socket) continue;
+    const tasks = Object.keys(players).map(id =>
+        playerLoop(id, set)
+    );
+    await Promise.all(tasks); // wait for all players to finish
+    io.emit("game_over");
+}
 
-        for (const question of set) {
-            players[id].question_answer = question.answer;
-            await new Promise(resolve => {
-                socket.emit("new_question", question, () => {
+async function playerLoop(id, questions) {
+    const socket = await getSocketById(id);
+    if (!socket) return;
+    for (const question of questions) {
+        players[id].question_answer = question.answer,
+        await new Promise(resolve => {
+            var finished = false;
+            socket.emit("new_question", question, () => {
+                if (!finished) {
+                    finished = true;
+                    clearTimeout(timer);
                     resolve();
-                })
-            })
-        }
+                }
+            });
+            const timer = setTimeout(() => {
+                if (!finished) {
+                    finished = true;
+                    socket.emit("time_up");
+                    resolve();
+                }
+            }, 2 * 60 * 1000);
+        });
     }
 }
 
