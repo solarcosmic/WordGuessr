@@ -30,6 +30,7 @@ var players = {}
 var currentRound = 0;
 const maxRounds = 16;
 let currentQuestion = null;
+var isGameOngoing = false;
 
 function randomSentence() {
     return paragraphs[Math.floor(Math.random() * paragraphs.length)];
@@ -49,37 +50,56 @@ function generateRandomSet() {
 }
 
 async function beginGame() {
+    isGameOngoing = true;
     const set = generateRandomSet();
     const tasks = Object.keys(players).map(id =>
         playerLoop(id, set)
     );
     await Promise.all(tasks); // wait for all players to finish
-    io.emit("game_over");
+    gameFinish();
 }
 
 async function playerLoop(id, questions) {
     const socket = await getSocketById(id);
     if (!socket) return;
+    if (!players[id]) {
+        console.log("Player (" + id + ") not found in the players array. Skipping.");
+        return;
+    }
     for (const question of questions) {
-        players[id].question_answer = question.answer,
+        players[id].question_answer = question.answer;
         await new Promise(resolve => {
             var finished = false;
-            socket.emit("new_question", question, () => {
-                if (!finished) {
-                    finished = true;
-                    clearTimeout(timer);
-                    resolve();
+            socket.emit(
+                "new_question",
+                question.text,
+                question.answer,
+                () => {
+                    if (!finished) {
+                        finished = true;
+                        resolve();
+                    }
                 }
-            });
-            const timer = setTimeout(() => {
+            );
+            /*const timer = setTimeout(() => {
                 if (!finished) {
                     finished = true;
                     socket.emit("time_up");
                     resolve();
                 }
-            }, 2 * 60 * 1000);
+            }, 2 * 60 * 1000);*/
         });
     }
+    players[id].complete = true;
+    socket.emit("questions_complete");
+}
+
+function gameFinish() {
+    io.emit("game_over");
+    for (const id in players) {
+        delete players[id]
+    }
+    isGameOngoing = false;
 }
 
 io.on("connection", async (socket) => {
@@ -101,6 +121,7 @@ io.on("connection", async (socket) => {
             score: 0,
             question_answer: "",
             last_question_complete: false,
+            complete: false
         };
 
         console.log(`Player added (${socket.id}) as \"${name}\"!`);

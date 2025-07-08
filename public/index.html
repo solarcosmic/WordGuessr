@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <script src="/socket.io/socket.io.js"></script>
+    <script src="confetti.browser.min.js"></script>
     <style>
         @font-face {
             font-family: "Inter";
@@ -20,8 +21,8 @@
             align-items: center;
             justify-content: center;
             flex-direction: column;
-            align-items: center;
             height: 300px;
+            max-width: 85%;
             background-color: #1f1f1f;
             border-radius: 8px;
         }
@@ -39,7 +40,7 @@
             border-radius: 8px;
             cursor: pointer;
         }
-        .leave-img {
+        .svg-img-button {
             width: 20px;
             height: 20px;
             padding: 5px 5px;
@@ -48,9 +49,24 @@
         #ready-btn {
             margin-left: auto;
             background-color: #00a2ff;
+            color: #ffffff;
             border: none;
             border-radius: 8px;
             cursor: pointer;
+        }
+        #game-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #fill-word-box {
+            background-color: #141414;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            display: block;
+            margin: 10px auto;
         }
     </style>
 </head>
@@ -72,114 +88,22 @@
             Game starting!
             <div id="fill-words" style="display: none;">
                 Fill in the missing word(s):<br>
-                <code id="question">The quick brown ___ jumped over the lazy dog.</code>
-                <input type="text" id="fill-word-box"></input>
+                <p id="question">The quick brown ___ jumped over the lazy dog.</p>
+                <input type="text" id="fill-word-box" placeholder="Take a guess..."></input>
+                <p style="color: grey; text-align: center; font-style: italic;" id="hint"></p>
                 <p style="color: green; display: none;" id="completed">Completed!</p>
             </div>
+        </div> 
+        <div id="questions-complete" style="display: none">
+            <h2>Questions complete!</h2>
+            <p>Waiting for the other players to catch up.</p>
+        </div>
+        <div id="game-over" style="display: none">
+            <h2>Game over! Thanks for playing.</h2>
+            <p>Click below to play again.</p>
+            <button id="play-again">Play Again</button>
         </div>
     </div>
 </body>
-<script>
-    const socket = io();
-    console.log("Attempting to connect...");
-    socket.on("connect", () => {
-        console.log("Connected! Socket id: " + socket.id);
-    });
-    socket.on("connect_error", err => {
-        console.error("Socket failed to connect: " + err);
-    })
-
-    const joinForm = document.getElementById("join_game_form");
-    var joinedGame = false;
-
-    joinForm.addEventListener("submit", function(event) {
-        event.preventDefault();
-
-        const playerName = document.getElementById("codename");
-        const nameValue = playerName.value;
-
-        console.log("Form submitting: " + nameValue);
-        socket.emit("join_game", nameValue);
-    });
-
-    socket.on("join_error", (err) => {
-        const join_err_object = document.getElementById("join_error");
-        join_err_object.textContent = "Uh oh! " + err;
-        join_err_object.style.display = "block";
-    });
-
-    socket.on("lobby_update", (players) => {
-        const lobby_players = document.getElementById("lobby-players");
-        const waiting_lobby = document.getElementById("waiting-lobby");
-        lobby_players.innerHTML = "";
-        for (const player of players) {
-            const playerDiv = document.createElement("div");
-            playerDiv.classList.add("lobby-player");
-            playerDiv.textContent = player["name"];
-            lobby_players.appendChild(playerDiv);
-            if (player["id"] == socket.id) {
-                playerDiv.textContent += " (You!)";
-                const leave_btn = document.createElement("button");
-                leave_btn.setAttribute("id", "leave-btn");
-                const leave_img = document.createElement("img");
-                leave_img.src = "/assets/right-from-bracket-solid.svg";
-                leave_img.alt = "Leave";
-                leave_img.classList.add("leave-img");
-                leave_btn.appendChild(leave_img);
-                leave_btn.addEventListener("click", () => {
-                    socket.emit("leave_lobby");
-                    joinForm.style.display = "block";
-                    waiting_lobby.style.display = "none";
-                });
-                if (player["ready"] == false) {
-                    const ready_btn = document.createElement("button");
-                    ready_btn.textContent = "Ready Up";
-                    ready_btn.setAttribute("id", "ready-btn");
-                    ready_btn.addEventListener("click", () => {
-                        socket.emit("ready");
-                    });
-                    playerDiv.appendChild(ready_btn);
-                }
-                playerDiv.appendChild(leave_btn);
-                joinForm.style.display = "none";
-                waiting_lobby.style.display = "block";
-            }
-            if (player["ready"] == true) {
-                playerDiv.textContent += " (Ready)";
-            }
-        }
-    });
-
-    function showQuestion(question, callback) {
-        console.log(question);
-        const game_screen = document.getElementById("game-screen");
-        game_screen.style.display = "block";
-        const fill_words = document.getElementById("fill-words");
-        fill_words.style.display = "block";
-        const questionElement = document.getElementById("question");
-        questionElement.textContent = question.text;
-        const completed = document.getElementById("completed");
-        const fill_box = document.getElementById("fill-word-box");
-        fill_box.value = "";
-        fill_box.focus();
-        fill_box.addEventListener("input", (e) => {
-            socket.emit("enter_fill_entry", fill_box.value);
-        })
-        socket.on("fill_entry_complete", () => {
-            //fill_box.disabled = true;
-            //completed.style.display = "block";
-            callback(true);
-        })
-    }
-
-    socket.on("start_game", () => {
-        const waiting_lobby = document.getElementById("waiting-lobby");
-        waiting_lobby.style.display = "none";
-        socket.on('new_question', (q, ack) => {
-            const question = showQuestion(q, (correct) => {
-                if (correct) ack();
-            });
-        });
-    })
-</script>
+<script src="script.js"></script>
 </html>
