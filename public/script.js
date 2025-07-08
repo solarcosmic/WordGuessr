@@ -11,15 +11,30 @@ const socket = io();
     var joinedGame = false;
     var isInMatch = false;
 
-    joinForm.addEventListener("submit", function(event) {
+    joinForm.addEventListener("submit", async function(event) {
         event.preventDefault();
 
         const playerName = document.getElementById("codename");
         const nameValue = playerName.value;
 
         console.log("Form submitting: " + nameValue);
-        socket.emit("join_game", nameValue);
+        joinGame(nameValue);
     });
+
+    function joinGame(nameValue) {
+        socket.timeout(5000).emit("join_game", nameValue, (err, response) => {
+            if (err) {
+                doError("\"" + err + "\". The server may be down?");
+            } else {
+                if (response.status == true) {
+                    joinedGame = true;
+                } else {
+                    doError(response.error);
+                }
+                return;
+            }
+        })
+    }
 
     socket.off("fill_entry_complete").on("fill_entry_complete", () => {
         if (curQuestionCallback) {
@@ -29,15 +44,15 @@ const socket = io();
 
     let curQuestionCallback = null;
 
-    socket.on("join_error", (err) => {
+    function doError(err) {
         const join_err_object = document.getElementById("join_error");
         join_err_object.textContent = "Uh oh! " + err;
         join_err_object.style.display = "block";
-    });
+    }
 
-    socket.on("game_join_self", () => {
-        isInMatch = false;
-    })
+    socket.on("join_error", (err) => { // here if needed
+        doError(err);
+    });
 
     socket.on("lobby_update", (players) => {
         const lobby_players = document.getElementById("lobby-players");
@@ -104,14 +119,8 @@ const socket = io();
         fill_box.value = "";
         fill_box.focus();
         fill_box.addEventListener("input", (e) => {
-            const val = fill_box.value.trim().toLowerCase();
-            if (val === questionAnswer.toLowerCase()) {
-                if (curQuestionCallback) {
-                    curQuestionCallback(true);
-                }
-                socket.emit("enter_fill_entry", val);
-            }
-        });
+            socket.emit("enter_fill_entry", fill_box.value);
+        })
         curQuestionCallback = callback;
     }
 
@@ -119,15 +128,17 @@ const socket = io();
         const waiting_lobby = document.getElementById("waiting-lobby");
         waiting_lobby.style.display = "none";
         socket.off("new_question")
-        socket.on("new_question", (q, answer, ack) => {
-            questionAnswer = answer;
-            const question = showQuestion(q, answer.charAt(0), (correct) => {
+        socket.on("new_question", (q, first_letter, ack) => {
+            if (!isInMatch) isInMatch = true;
+            const question = showQuestion(q, first_letter, (correct) => {
                 if (correct) ack();
             });
         });
     })
 
     socket.on("game_over", () => {
+        if (!isInMatch) isInMatch = false;
+        if (!joinedGame) return;
         const questions_complete = document.getElementById("questions-complete");
         questions_complete.style.display = "none";
         const game_over = document.getElementById("game-over");
@@ -147,5 +158,5 @@ const socket = io();
         const nameValue = playerName.value;
 
         console.log("Form submitting: " + nameValue);
-        socket.emit("join_game", nameValue);
+        joinGame(nameValue);
     })

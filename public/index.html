@@ -12,19 +12,47 @@
             src: url("assets/Inter.ttf");
         }
         body {
-            background-color: #141414;
+            background: linear-gradient(0deg, rgb(0, 0, 0), rgba(0, 0, 0, 0.2)), url("assets/simon-lee-Ue97JK9S0QE-unsplash.jpg");
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-attachment: fixed;
             color: #ffffff;
             font-family: "Inter", sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
         #container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            height: 300px;
-            max-width: 85%;
-            background-color: #1f1f1f;
+            width: 100%;
+            max-width: 500px;
             border-radius: 8px;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* From https://css.glass */
+            background: rgba(88, 88, 88, 0.2);
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        #container > .not-centered {
+            align-self: stretch;
+        }
+
+        .logo {
+            width: 100%;
+            max-width: 340px;
+            height: auto;
         }
         .lobby-player {
             display: flex;
@@ -59,7 +87,7 @@
             align-items: center;
             justify-content: center;
         }
-        #fill-word-box {
+        #fill-word-box, #codename {
             background-color: #141414;
             color: #ffffff;
             border: none;
@@ -68,12 +96,21 @@
             display: block;
             margin: 10px auto;
         }
+        #choose-name-encourage {
+            text-align: center;
+        }
+        #codename {
+            text-align: center;
+            background-color: #7e7e7e93;
+        }
     </style>
 </head>
 <body>
     <div id="container">
-        <img src="/assets/wordguessr_logo_full.png" style="width: 340px; height: 60px; margin: 20px 0;"></img>
+        <img src="/assets/wordguessr_logo_full.png" class="logo"></img>
+        
         <form name="join_name" id="join_game_form">
+            <p id="choose-name-encourage">Choose a name, get creative!</p>
             <input type="text" name="codename" id="codename"></input>
             <input name="Submit" type="submit" value="Join"></input>
         </form>

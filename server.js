@@ -70,17 +70,14 @@ async function playerLoop(id, questions) {
         players[id].question_answer = question.answer;
         await new Promise(resolve => {
             var finished = false;
-            socket.emit(
-                "new_question",
-                question.text,
-                question.answer,
-                () => {
-                    if (!finished) {
-                        finished = true;
-                        resolve();
-                    }
+            console.log(question.answer);
+            socket.emit("new_question", question.text, question.answer.charAt(0), () => {
+                if (!finished) {
+                    finished = true;
+                    //clearTimeout(timer);
+                    resolve();
                 }
-            );
+            });
             /*const timer = setTimeout(() => {
                 if (!finished) {
                     finished = true;
@@ -104,13 +101,13 @@ function gameFinish() {
 
 io.on("connection", async (socket) => {
     console.log("New client connected: ", socket.id);
-    socket.on("join_game", (name) => {
+    socket.on("join_game", (name, callback) => {
         console.log("Join game requested from socket: " + socket.id + " with name: " + name);
         for (const id in players) {
             console.log(id, players[id].name, name);
             if (players[id].name == name) {
                 console.log("Player (" + socket.id + ") tried joining with duplicate name \"" + name + "\"!");
-                socket.emit("join_error", "Somebody already has the same name as you!");
+                callback({ status: false, error: "Somebody already has the same name as you!" });
                 return;
             }
         }
@@ -125,6 +122,7 @@ io.on("connection", async (socket) => {
         };
 
         console.log(`Player added (${socket.id}) as \"${name}\"!`);
+        callback({status: true})
         io.emit("lobby_update", Object.values(players));
     });
     socket.on("disconnect", () => {
