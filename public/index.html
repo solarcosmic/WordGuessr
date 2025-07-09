@@ -59,7 +59,6 @@
             align-items: center;
             padding: 10px 20px;
             margin-bottom: 5px;
-            background-color: #1f1f1f;
         }
         #leave-btn {
             margin-left: auto;
@@ -103,6 +102,34 @@
             text-align: center;
             background-color: #7e7e7e93;
         }
+        #signal-svg {
+            width: 16px;
+            height: 16px;
+            margin-right: 10px;
+            margin-top: 15px;
+        }
+        .signal-warn {
+            filter: invert(64%) sepia(93%) saturate(1841%) hue-rotate(15deg) brightness(94%) contrast(104%);
+        }
+        .signal-danger {
+            filter: invert(12%) sepia(68%) saturate(6272%) hue-rotate(356deg) brightness(89%) contrast(113%);
+        }
+        .signal-good {
+            filter: invert(42%) sepia(96%) saturate(945%) hue-rotate(90deg) brightness(101%) contrast(111%);
+        }
+        #submit {
+            background-color: #14141475;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            display: block;
+            margin: 10px auto;
+            cursor: pointer;
+        }
+        #submit:hover {
+            background-color: #1414144f;
+        }
     </style>
 </head>
 <body>
@@ -112,8 +139,9 @@
         <form name="join_name" id="join_game_form">
             <p id="choose-name-encourage">Choose a name, get creative!</p>
             <input type="text" name="codename" id="codename"></input>
-            <input name="Submit" type="submit" value="Join"></input>
+            <input name="Submit" type="submit" value="Join" id="submit"></input>
         </form>
+        <span><img src="assets/signal-solid.svg" id="signal-svg"></img><span id="ping-status"></span></span>
         <p style="color: rgb(255, 118, 118); display: none;" id="join_error">Uh oh!</p>
         <div id="waiting-lobby" style="display: none;">
             <h1>Waiting Lobby</h1>
@@ -129,6 +157,7 @@
                 <input type="text" id="fill-word-box" placeholder="Take a guess..."></input>
                 <p style="color: grey; text-align: center; font-style: italic;" id="hint"></p>
                 <p style="color: green; display: none;" id="completed">Completed!</p>
+                
             </div>
         </div> 
         <div id="questions-complete" style="display: none">

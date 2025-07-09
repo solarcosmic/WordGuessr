@@ -101,6 +101,9 @@ function gameFinish() {
 
 io.on("connection", async (socket) => {
     console.log("New client connected: ", socket.id);
+    socket.on("ping", (callback) => {
+        callback();
+    })
     socket.on("join_game", (name, callback) => {
         console.log("Join game requested from socket: " + socket.id + " with name: " + name);
         for (const id in players) {

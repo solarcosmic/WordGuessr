@@ -2,6 +2,22 @@ const socket = io();
     console.log("Attempting to connect...");
     socket.on("connect", () => {
         console.log("Connected! Socket id: " + socket.id);
+        const start = Date.now();
+        socket.emit("ping", () => {
+            const duration = Date.now() - start;
+            const ping_status = document.getElementById("ping-status")
+            ping_status.textContent = "Ping: " + duration + " ms";
+            if (duration >= 1 && duration < 60) {
+                ping_status.style.color = "#00c70a";
+                document.getElementById("signal-svg").classList.add("signal-good");
+            } else if (duration >= 60 && duration < 100) {
+                ping_status.style.color = "#c7a900";
+                document.getElementById("signal-svg").classList.add("signal-warn");
+            } else if (duration >= 100) {
+                ping_status.style.color = "#c70000";
+                document.getElementById("signal-svg").classList.add("signal-danger");
+            }
+        })
     });
     socket.on("connect_error", err => {
         console.error("Socket failed to connect: " + err);
