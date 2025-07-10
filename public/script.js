@@ -7,6 +7,7 @@ const socket = io();
             const duration = Date.now() - start;
             const ping_status = document.getElementById("ping-status")
             ping_status.textContent = "Ping: " + duration + " ms";
+            document.getElementById("ping").style.display = "block";
             if (duration >= 1 && duration < 60) {
                 ping_status.style.color = "#00c70a";
                 document.getElementById("signal-svg").classList.add("signal-good");
