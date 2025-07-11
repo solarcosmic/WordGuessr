@@ -1,13 +1,27 @@
+/*
+ * Copyright (c) 2025 solarcosmic.
+ * This project is licensed under the MIT license.
+ * To view the license, see <https://opensource.org/licenses/MIT>.
+*/
 const express = require("express");
 const path = require("path");
 const http = require("http");
 const { Server } = require("socket.io");
 const fs = require("fs");
 const {version} = require("./package.json");
+const yaml = require("js-yaml");
+
+var settings = null;
+try {
+    const doc = yaml.load(fs.readFileSync("./settings.yml", "utf-8"));
+    settings = doc;
+} catch (e) {
+    console.log(e);
+}
 
 const app = express();
 const server = http.createServer(app);
-const port = process.env.PORT || 8080;
+const port = settings?.port ?? process.env.PORT ?? 8080;
 const io = new Server(server);
 
 app.use(express.static(path.join(__dirname, "public")));
@@ -20,17 +34,18 @@ console.log("Welcome to WordGuessr server v1.0.0!");
 const raw = fs.readFileSync("formatted.jsonl", "utf-8");
 const paragraphs = raw.split("\n").filter(Boolean).map(line => JSON.parse(line));
 
-console.log("Loaded " + paragraphs.length + " quotes.");
+console.log("Loaded " + paragraphs.length + " quotes (m-ric/english_historical_quotes).");
 
 server.listen(port, () => {
-    console.log("Server Port: " + port);
+    console.log("=!=");
+    console.log("WordGuessr is now running on port " + port + "!");
+    console.log(`To access the server, you can use the Server IP:${port} or 127.0.0.1:${port} if running on the same machine.`)
+    console.log("This can be changed in settings.yml.");
+    console.log("=!=");
+    console.log("Waiting for connections and logs.");
 })
 
 var players = {}
-
-var currentRound = 0;
-const maxRounds = 16;
-let currentQuestion = null;
 var isGameOngoing = false;
 
 function randomSentence() {
@@ -69,7 +84,6 @@ async function playerLoop(id, questions) {
     }
     for (const question of questions) {
         players[id].question_answer = question.answer;
-        console.log(question.answer);
         await new Promise(resolve => {
             var finished = false;
             const start = Date.now();
@@ -98,6 +112,7 @@ function gameFinish() {
         score: player.correct_count
     }));
     leaderboard.sort((a, b) => b.score - a.score);
+    console.log("Game has ended!", leaderboard);
     io.emit("game_over", leaderboard);
     for (const id in players) {
         delete players[id]
