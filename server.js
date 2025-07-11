@@ -3,6 +3,7 @@ const path = require("path");
 const http = require("http");
 const { Server } = require("socket.io");
 const fs = require("fs");
+const {version} = require("./package.json");
 
 const app = express();
 const server = http.createServer(app);
@@ -68,23 +69,20 @@ async function playerLoop(id, questions) {
     }
     for (const question of questions) {
         players[id].question_answer = question.answer;
+        console.log(question.answer);
         await new Promise(resolve => {
             var finished = false;
-            console.log(question.answer);
-            socket.emit("new_question", question.text, question.answer.charAt(0), () => {
+            const start = Date.now();
+            socket.emit("new_question", question.text, question.answer.charAt(0), question.answer.length, question.author, () => {
                 if (!finished) {
                     finished = true;
-                    //clearTimeout(timer);
+                    const duration = Date.now() - start;
+                    players[id].correct_count += 1;
+                    players[id].total_time += duration;
+                    players[id].question_times.push(duration);
                     resolve();
                 }
-            });
-            /*const timer = setTimeout(() => {
-                if (!finished) {
-                    finished = true;
-                    socket.emit("time_up");
-                    resolve();
-                }
-            }, 2 * 60 * 1000);*/
+            })
         });
     }
     players[id].complete = true;
@@ -92,7 +90,15 @@ async function playerLoop(id, questions) {
 }
 
 function gameFinish() {
-    io.emit("game_over");
+    const leaderboard = Object.values(players).map(player => ({
+        name: player.name,
+        correct: player.correct_count,
+        avg_time: player.correct_count > 0 ? Math.round(player.total_time / player.correct_count) : 0,
+        total_time: player.total_time,
+        score: player.correct_count
+    }));
+    leaderboard.sort((a, b) => b.score - a.score);
+    io.emit("game_over", leaderboard);
     for (const id in players) {
         delete players[id]
     }
@@ -103,6 +109,9 @@ io.on("connection", async (socket) => {
     console.log("New client connected: ", socket.id);
     socket.on("ping", (callback) => {
         callback();
+    })
+    socket.on("server_stats", (callback) => {
+        callback("v" + version || "(unknown version)");
     })
     socket.on("join_game", (name, callback) => {
         console.log("Join game requested from socket: " + socket.id + " with name: " + name);
@@ -121,7 +130,10 @@ io.on("connection", async (socket) => {
             score: 0,
             question_answer: "",
             last_question_complete: false,
-            complete: false
+            complete: false,
+            correct_count: 0,
+            total_time: 0,
+            question_times: []
         };
 
         console.log(`Player added (${socket.id}) as \"${name}\"!`);

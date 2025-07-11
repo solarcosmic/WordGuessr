@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>WordGuessr</title>
     <script src="/socket.io/socket.io.js"></script>
     <script src="confetti.browser.min.js"></script>
     <style>
@@ -130,7 +130,21 @@
         #submit:hover {
             background-color: #1414144f;
         }
+        #credits-box {
+            position: fixed;
+            bottom: 0;
+            right: 10px;
+            padding: 10px;
+        }
+        #credits {
+            position: static;
+        }
+        .leaderboard-item {
+            margin: 8px 0;
+            font-size: 18px;
+        }
     </style>
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
 </head>
 <body>
     <div id="container">
@@ -145,19 +159,18 @@
         <p style="color: rgb(255, 118, 118); display: none;" id="join_error">Uh oh!</p>
         <div id="waiting-lobby" style="display: none;">
             <h1>Waiting Lobby</h1>
-            <div id="lobby-players">
-
-            </div>
+            <div id="lobby-players"></div>
         </div>
         <div id="game-screen" style="display: none;">
             Game starting!
             <div id="fill-words" style="display: none;">
                 Fill in the missing word(s):<br>
                 <p id="question">The quick brown ___ jumped over the lazy dog.</p>
+                <p style="color: grey; text-align: center; font-style: italic; text-align: right;" id="author"></p>
                 <input type="text" id="fill-word-box" placeholder="Take a guess..."></input>
                 <p style="color: grey; text-align: center; font-style: italic;" id="hint"></p>
+                <p style="color: grey; text-align: center; font-style: italic;" id="hint2"></p>
                 <p style="color: green; display: none;" id="completed">Completed!</p>
-                
             </div>
         </div> 
         <div id="questions-complete" style="display: none">
@@ -166,9 +179,13 @@
         </div>
         <div id="game-over" style="display: none">
             <h2>Game over! Thanks for playing.</h2>
+            <div id="leaderboard"></div>
             <p>Click below to play again.</p>
             <button id="play-again">Play Again</button>
         </div>
+    </div>
+    <div id="credits-box">
+        <p id="credits">WordGuessr server</p>
     </div>
 </body>
 <script src="script.js"></script>

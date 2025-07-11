@@ -19,6 +19,9 @@ const socket = io();
                 document.getElementById("signal-svg").classList.add("signal-danger");
             }
         })
+        socket.emit("server_stats", (version) => {
+            document.getElementById("credits").textContent = "WordGuessr server " + version;
+        })
     });
     socket.on("connect_error", err => {
         console.error("Socket failed to connect: " + err);
@@ -45,6 +48,10 @@ const socket = io();
             } else {
                 if (response.status == true) {
                     joinedGame = true;
+                    const waiting_lobby = document.getElementById("waiting-lobby");
+                    const game_over = document.getElementById("game-over");
+                    waiting_lobby.style.display = "block";
+                    game_over.style.display = "none";
                 } else {
                     doError(response.error);
                 }
@@ -122,15 +129,19 @@ const socket = io();
         }
     });
 
-    function showQuestion(question, first_letter, callback) {
+    function showQuestion(question, first_letter, characters, author, callback) {
         const game_screen = document.getElementById("game-screen");
         game_screen.style.display = "block";
         const fill_words = document.getElementById("fill-words");
         fill_words.style.display = "block";
         const questionElement = document.getElementById("question");
         const hint = document.getElementById("hint");
+        const hint2 = document.getElementById("hint2");
+        const author_id = document.getElementById("author");
         questionElement.textContent = question;
         hint.textContent = "Hint: Starts with the letter " + first_letter.toUpperCase() + "...";
+        hint2.textContent = "Hint: The word has " + characters + " letters.";
+        author_id.textContent = "⎯ " + author;
         const completed = document.getElementById("completed");
         const fill_box = document.getElementById("fill-word-box");
         fill_box.value = "";
@@ -145,20 +156,33 @@ const socket = io();
         const waiting_lobby = document.getElementById("waiting-lobby");
         waiting_lobby.style.display = "none";
         socket.off("new_question")
-        socket.on("new_question", (q, first_letter, ack) => {
+        socket.on("new_question", (q, first_letter, characters, author, ack) => {
             if (!isInMatch) isInMatch = true;
-            const question = showQuestion(q, first_letter, (correct) => {
+            const question = showQuestion(q, first_letter, characters, author, (correct) => {
                 if (correct) ack();
             });
         });
     })
 
-    socket.on("game_over", () => {
+    socket.on("game_over", (leaderboard) => {
         if (!isInMatch) isInMatch = false;
         if (!joinedGame) return;
         const questions_complete = document.getElementById("questions-complete");
-        questions_complete.style.display = "none";
         const game_over = document.getElementById("game-over");
+        const leader_cont = document.getElementById("leaderboard");
+        leader_cont.innerHTML = "";
+        leaderboard.forEach((player, index) => {
+            const entry = document.createElement("div");
+            entry.classList.add("leaderboard-item");
+            entry.innerHTML = `
+            <strong>${index + 1}.</strong> ${player.name}
+            - Score: ${player.score}
+            Correct: ${player.correct},
+            Avg Time: ${player.avg_time}ms
+            `;
+            leader_cont.appendChild(entry);
+        })
+        questions_complete.style.display = "none";
         game_over.style.display = "block";
     });
 
@@ -171,6 +195,9 @@ const socket = io();
     })
 
     document.getElementById("game-over").addEventListener("click", () => {
+        socket.emit("leave_lobby");
+        joinedGame = false;
+        isInMatch = false;
         const playerName = document.getElementById("codename");
         const nameValue = playerName.value;
 
