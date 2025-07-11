@@ -2,23 +2,7 @@ const socket = io();
     console.log("Attempting to connect...");
     socket.on("connect", () => {
         console.log("Connected! Socket id: " + socket.id);
-        const start = Date.now();
-        socket.emit("ping", () => {
-            const duration = Date.now() - start;
-            const ping_status = document.getElementById("ping-status")
-            ping_status.textContent = "Ping: " + duration + " ms";
-            document.getElementById("ping").style.display = "block";
-            if (duration >= 1 && duration < 60) {
-                ping_status.style.color = "#00c70a";
-                document.getElementById("signal-svg").classList.add("signal-good");
-            } else if (duration >= 60 && duration < 100) {
-                ping_status.style.color = "#c7a900";
-                document.getElementById("signal-svg").classList.add("signal-warn");
-            } else if (duration >= 100) {
-                ping_status.style.color = "#c70000";
-                document.getElementById("signal-svg").classList.add("signal-danger");
-            }
-        })
+        ping();
         socket.emit("server_stats", (version) => {
             document.getElementById("credits").textContent = "WordGuessr server " + version;
         })
@@ -26,6 +10,13 @@ const socket = io();
     socket.on("connect_error", err => {
         console.error("Socket failed to connect: " + err);
     })
+    window.onload = () => {
+        const loader = document.getElementById("loader");
+        setTimeout(() => {
+            loader.classList.add("hidden");
+            refreshPing();
+        }, 1000);
+    }
 
     const joinForm = document.getElementById("join_game_form");
     var joinedGame = false;
@@ -204,3 +195,28 @@ const socket = io();
         console.log("Form submitting: " + nameValue);
         joinGame(nameValue);
     })
+
+    function ping() {
+        const start = Date.now();
+        socket.emit("ping", () => {
+            const duration = Date.now() - start;
+            const ping_status = document.getElementById("ping-status")
+            ping_status.textContent = "Ping: " + duration + " ms";
+            document.getElementById("ping").style.display = "block";
+            document.getElementById("signal-svg").classList.remove(...document.getElementById("signal-svg").classList);
+            if (duration >= 1 && duration < 60) {
+                ping_status.style.color = "#00c70a";
+                document.getElementById("signal-svg").classList.add("signal-good");
+            } else if (duration >= 60 && duration < 100) {
+                ping_status.style.color = "#c7a900";
+                document.getElementById("signal-svg").classList.add("signal-warn");
+            } else if (duration >= 100) {
+                ping_status.style.color = "#c70000";
+                document.getElementById("signal-svg").classList.add("signal-danger");
+            }
+        })
+    }
+    function refreshPing() {
+        ping();
+        setTimeout(refreshPing, 5000);
+    }

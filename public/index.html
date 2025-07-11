@@ -117,7 +117,7 @@
         .signal-good {
             filter: invert(42%) sepia(96%) saturate(945%) hue-rotate(90deg) brightness(101%) contrast(111%);
         }
-        #submit {
+        #submit, #play-again {
             background-color: #14141475;
             color: #ffffff;
             border: none;
@@ -143,10 +143,30 @@
             margin: 8px 0;
             font-size: 18px;
         }
+        /* https://dev.to/lensco825/how-to-quickly-add-a-loading-screen-onto-your-website-7ga */
+        #loader {
+            position: absolute;
+            width: 100%;
+            height: 100vh;
+            z-index: 999999;
+            background-color: #141414;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .hidden {
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s 0.5s, opacity 0.5s linear;
+        }
     </style>
     <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
 </head>
 <body>
+    <div id="loader">
+        <span><img src="/assets/favicon.ico" style="width: 28px; height: 28px; margin-right: 15px; margin-top: 5px;"></img></span>
+        Loading...
+    </div>
     <div id="container">
         <img src="/assets/wordguessr_logo_full.png" class="logo"></img>
         
