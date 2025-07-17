@@ -27,6 +27,12 @@ const joinForm = document.getElementById("join_game_form");
 var joinedGame = false;
 var isInMatch = false;
 
+function clearErr() {
+    const err = document.getElementById("join_error");
+    err.textContent = "";
+    err.style.display = "none";
+}
+
 joinForm.addEventListener("submit", async function(event) {
     event.preventDefault();
 
@@ -38,6 +44,7 @@ joinForm.addEventListener("submit", async function(event) {
 });
 
 function joinGame(nameValue) {
+    clearErr();
     socket.timeout(5000).emit("join_game", nameValue, (err, response) => {
         if (err) {
             doError("\"" + err + "\". The server may be down?");
@@ -98,6 +105,7 @@ socket.on("lobby_update", (players) => {
                 socket.emit("leave_lobby");
                 joinForm.style.display = "block";
                 waiting_lobby.style.display = "none";
+                clearErr();
             });
             if (player["ready"] == false) {
                 const ready_btn = document.createElement("button");
@@ -135,8 +143,8 @@ function showQuestion(question, first_letter, characters, author, callback) {
     const hint2 = document.getElementById("hint2");
     const author_id = document.getElementById("author");
     questionElement.textContent = question;
-    hint.textContent = "Hint: Starts with the letter " + first_letter.toUpperCase() + "...";
-    hint2.textContent = "Hint: The word has " + characters + " letters.";
+    hint.textContent = "Starts with the letter " + first_letter.toUpperCase() + "...";
+    hint2.textContent = "The word has " + characters + " letters.";
     author_id.textContent = "⎯ " + author;
     const completed = document.getElementById("completed");
     const fill_box = document.getElementById("fill-word-box");
@@ -148,9 +156,10 @@ function showQuestion(question, first_letter, characters, author, callback) {
     curQuestionCallback = callback;
 }
 
-socket.on("start_game", () => {
+socket.on("start_game", (data) => {
     const waiting_lobby = document.getElementById("waiting-lobby");
     waiting_lobby.style.display = "none";
+    if (data?.limit) startCountdown(data.limit);
     socket.off("new_question")
     socket.on("new_question", (q, first_letter, characters, author, ack) => {
         if (!isInMatch) isInMatch = true;
@@ -197,6 +206,7 @@ document.getElementById("game-over").addEventListener("click", () => {
     const playerName = document.getElementById("codename");
     const nameValue = playerName.value;
 
+    clearErr();
     console.log("Form submitting: " + nameValue);
     joinGame(nameValue);
 })
@@ -225,4 +235,28 @@ function ping() {
 function refreshPing() {
     ping();
     setTimeout(refreshPing, 5000);
+}
+
+function startCountdown(ms) {
+    const countdownThing = document.getElementById("countdown");
+    countdownThing.style.display = "block";
+    var timeLeft = ms / 1000;
+    countdownThing.textContent = formatTime(timeLeft);
+    const interval = setInterval(() => {
+        timeLeft -= 1;
+        if (timeLeft <= 0) {
+            clearInterval(interval);
+            countdownThing.textContent = "Time's up!";
+            const game_screen = document.getElementById("game-screen");
+            game_screen.style.display = "none";
+        } else {
+            countdownThing.textContent = formatTime(timeLeft);
+        }
+    }, 1000);
+}
+
+function formatTime(sec) {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}:${s<10?"0":""}${s}`; // idk what this actually is
 }

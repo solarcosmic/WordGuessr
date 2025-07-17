@@ -62,17 +62,22 @@ async function getSocketById(socketId) {
 }
 
 function generateRandomSet() {
-    return Array.from({ length: 16 }, () => randomSentence());
+    return Array.from({ length: 8 }, () => randomSentence());
 }
 
 async function beginGame() {
     isGameOngoing = true;
+    const timer = setTimeout(() => {
+        console.log("Time limit reached, ending game.");
+        gameFinish();
+    }, 2 * 60 * 1000);
     const set = generateRandomSet();
     const tasks = Object.keys(players).map(id =>
         playerLoop(id, set)
     );
     await Promise.all(tasks); // wait for all players to finish
-    gameFinish();
+    clearTimeout(timer);
+    if (isGameOngoing) gameFinish();
 }
 
 async function playerLoop(id, questions) {
@@ -83,6 +88,7 @@ async function playerLoop(id, questions) {
         return;
     }
     for (const question of questions) {
+        if (!isGameOngoing) break;
         players[id].question_answer = question.answer;
         await new Promise(resolve => {
             var finished = false;
@@ -104,6 +110,8 @@ async function playerLoop(id, questions) {
 }
 
 function gameFinish() {
+    if (!isGameOngoing) return;
+    isGameOngoing = false;
     const leaderboard = Object.values(players).map(player => ({
         name: player.name,
         correct: player.correct_count,
@@ -117,7 +125,6 @@ function gameFinish() {
     for (const id in players) {
         delete players[id]
     }
-    isGameOngoing = false;
 }
 
 io.on("connection", async (socket) => {
@@ -130,6 +137,17 @@ io.on("connection", async (socket) => {
     })
     socket.on("join_game", (name, callback) => {
         console.log("Join game requested from socket: " + socket.id + " with name: " + name);
+        if (typeof name != "string") {
+            return;
+        };
+        if (name.trim() == "" || name.trim() == null) {
+            callback({ status: false, error: "You can't have an empty username!" });
+            return;
+        }
+        if (name.length > 10) {
+            callback({ status: false, error: "Name must be 10 or less characters long." });
+            return;
+        }
         for (const id in players) {
             console.log(id, players[id].name, name);
             if (players[id].name == name) {
@@ -175,7 +193,7 @@ io.on("connection", async (socket) => {
             if (players[player].ready == true) count += 1;
         }
         if (count == limit) {
-            io.emit("start_game");
+            io.emit("start_game", {limit: 2 * 60 * 1000});
             beginGame();
         }
     });
