@@ -2,6 +2,7 @@
 
 # WordGuessr
 Challenge opponents to fill in the word the fastest!
+[Demo Link](http://node01.solarcosmic.net:1905/)
 
 WordGuessr uses a dataset of about 24,000 quotes. You can view the dataset on [Hugging Face here](https://huggingface.co/datasets/m-ric/english_historical_quotes).
 
