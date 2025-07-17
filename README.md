@@ -3,7 +3,9 @@
 # WordGuessr
 Challenge opponents to fill in the word the fastest!
 
-WordGuessr uses a dataset of about 24,000 quotes. You can view the dataset on [Hugging Face here](https://huggingface.co/datasets/m-ric/english_historical_quotes);
+WordGuessr uses a dataset of about 24,000 quotes. You can view the dataset on [Hugging Face here](https://huggingface.co/datasets/m-ric/english_historical_quotes).
+
+You can try the demo [here](http://node01.solarcosmic.net:1905/), although it is best run locally to avoid ping issues.
 
 ## How It Works
 1. Players join up, choosing a name.
@@ -20,7 +22,7 @@ WordGuessr requires Node.js (latest) and npm (preferably latest).
 2. Once Node.js and npm are installed, you'll want to download WordGuessr. [Click here](https://github.com/solarcosmic/WordGuessr/archive/refs/heads/main.zip) to download it as a .zip. (Cloning the GitHub repository works too).
 3. Using your favourite archive extractor, extract the .zip file you have just downloaded to its folder, for example:
     - Right click on .zip > "Extract to wordguessr\\". (7-Zip, WinRAR)
-Note that there may be another folder (e.g. "WordGuessr-main"), just navigate inside that folder.
+Note that there may be another folder (e.g. "WordGuessr-main"), just navigate inside that folder for the below instructions.
 
 ### Windows-specific instructions
 4. In File Explorer, navigate inside that newly created folder, and where it has the navigation path (see below) remove the contents of the text and type `cmd`.
@@ -34,3 +36,5 @@ Note that there may be another folder (e.g. "WordGuessr-main"), just navigate in
 5. Then, run `npm i` to install the required dependencies, and when you want to run the server, run `node server.js`.
 
 By default, WordGuessr hosts the server on port 8080, this can be changed in `settings.yml`. When you make changes to it, feel free to restart the server.
+
+Happy guessing!
