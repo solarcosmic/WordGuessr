@@ -20,10 +20,13 @@ WordGuessr requires Node.js (latest) and npm (preferably latest).
 2. Once Node.js and npm are installed, you'll want to download WordGuessr. [Click here](https://github.com/solarcosmic/WordGuessr/archive/refs/heads/main.zip) to download it as a .zip. (Cloning the GitHub repository works too).
 3. Using your favourite archive extractor, extract the .zip file you have just downloaded to its folder, for example:
     - Right click on .zip > "Extract to wordguessr\\". (7-Zip, WinRAR)
+Note that there may be another folder (e.g. "WordGuessr-main"), just navigate inside that folder.
 
 ### Windows-specific instructions
 4. In File Explorer, navigate inside that newly created folder, and where it has the navigation path (see below) remove the contents of the text and type `cmd`.
-5. Then, run `npm i` to install the required dependencies, and when you want to run the server, run `node server.js`.
+<img width="899" height="210" alt="image" src="https://github.com/user-attachments/assets/31a69d78-ece5-4848-80d6-cdfb3ef08fb3" />
+
+6. Then, run `npm i` to install the required dependencies, and when you want to run the server, run `node server.js`.
 
 ### macOS/Linux specific instructions
 > This assumes you have some basic terminal knowledge.
